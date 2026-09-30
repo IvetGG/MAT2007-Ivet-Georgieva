@@ -8,6 +8,7 @@
 #include <iomanip> // controls output formatting (fixed, setprecision, setw)
 #include <algorithm> // allows sorting
 #include <cmath> // allows mathematical functions such as sqrt(), pow(), and abs()
+#include <numeric> // allows calculations using accumulate()
 
 using namespace std; // removes the need to write "std::" before standard library functions
 
@@ -32,12 +33,12 @@ vector<string> cleaned_genres(const string& raw) { // & means the function uses 
     while (getline(ss_g, gs, '-')) { // getline() reads text until it reaches a hyphen; it reads from ss, and stores in gs
 
         // Remove spaces from the begining
-        while (!gs.empty() && gs[0] == ' ') { // checks thst the genre string is not empty and if the first character is a space
+        while (!gs.empty() && gs[0] == ' ') { // checks that the genre string is not empty and if the first character is a space
             gs.erase(0, 1); // start from the first character and erase one character
         }
 
         // Remove spaces from the end
-        while (!gs.empty() && gs[gs.length() - 1] == ' ') { // checks thst the genre string is not empty and if the last character is a space
+        while (!gs.empty() && gs[gs.length() - 1] == ' ') { // checks that the genre string is not empty and if the last character is a space
             gs.erase(gs.length() - 1, 1); // start from the last character and erase one character
         }
 
@@ -66,6 +67,7 @@ string get_runtime_class(double runtime_minutes) {
         return "Long-Run (>2400m)"; // typically more than 100 episodes with 24m episode runtime
 }
 
+
 // The data structure for a single anime record (row in the CSV)
 struct Anime { // A struct is similar to a class, but its variables are public by default
     string title;                       // stores the anime's title
@@ -76,6 +78,7 @@ struct Anime { // A struct is similar to a class, but its variables are public b
     double weighted_rating = 0.0;       // stores the final score calculated using Bayesian formula
 };
 
+
 // Temporary storage for tracking cumulative scores and counts during aggregation
 struct GroupStats {
     double total_weighted_rating = 0.0; // sum of Bayesian-adjusted ratings
@@ -84,12 +87,25 @@ struct GroupStats {
     int count = 0; // number of anime in the group
 };
 
-int data_analysis() {
+// Store final results
+    struct ResultRow {
+        string genre;
+        string runtime_class;
+        int count;
+        double average_raw_score;
+        int average_popularity;
+        double average_rating;
+        double standard_error;
+    };
+
+
+// Data analysis function
+map<string, vector<double>> data_analysis(vector<ResultRow>& results) { // the variable is a map, so the genre-runtime keys and their ratings can be used later in the code; uses results from main() and fills it with the data analysis results
     ifstream file("anilist_anime_data.csv"); // opens the CSV file for reading
 
     if (!file.is_open()) { // checks if file failed to open
         cout << "File not found!" << endl; // prints error message
-        return 1; // exits the program
+        return {}; // stops the function and returns an empty map
     }
 
     vector<Anime> dataset; // stores all anime entries using the structure 
@@ -98,12 +114,16 @@ int data_analysis() {
     getline(file, line); // reads the header row from file and stores it in line, so the next time line is called, it will start from the first actual data row
 
     while (getline(file, line)) { // reads the CSV line-by-line until reaching the end of the file
-        stringstream ss_l(line); // convert the current CSV line into a stream
+        stringstream ss_l(line); // converts the current CSV line into a stream
         string col; // temporarily holds one colume value at a time
         vector<string> cols; // stores all column values from the current row
 
         while (getline(ss_l, col, ',')) { // splits the line by commas and stores the value in 'col'
             cols.push_back(col);  // stores all 'col' values into the 'cols' array
+    }
+
+    if (cols.size() < 9) {
+        continue; // skip incomplete rows that do not contain all required columns
     }
 
     try { // precausion in case stod() cannot convert string to double
@@ -152,14 +172,14 @@ int data_analysis() {
     double mean = 0.0; 
 
     for(const Anime& anime: cutoff_dataset) { 
-    sum += anime.score; // adds all scores together for anime entries in 'cutoff_dataset'
-    mean = sum / cutoff_dataset.size();
+        sum += anime.score; // adds all scores together for anime entries in cutoff_dataset
     }
+    mean = sum / cutoff_dataset.size(); // calculates the mean after all scores have been added
 
     cout << "Total mean rating of popular anime: " << mean << endl;
 
     // Calculate median popularity of the top 50%
-    vector<double> ordered_popularity; // a new variable which will be ordered to find the medium
+    vector<double> ordered_popularity; // a new variable which will be ordered to find the median
 
     for(const Anime& anime: cutoff_dataset) { 
     ordered_popularity.push_back(anime.popularity); 
@@ -188,8 +208,8 @@ int data_analysis() {
     }
 
     // Genre and Runtime Aggregation
-    map<string, GroupStats> matrix; // a map stores information as key-value pairs (Genre, Runtime Class)
-    map<string,vector<double>> group_ratings; // stores all individual Bayesian ratings for each Genre + Runtime combination
+    map<string, GroupStats> matrix; // stores information as key-value pairs (Genre, Runtime Class)
+    map<string,vector<double>> group_ratings; // stores all individual Bayesian ratings for each genre-runtime combination
 
     for(auto& a : cutoff_dataset) { // auto automatically assigns a type to the variable
         string runtime_class = get_runtime_class(a.runtime_minutes); // assign runtime class for current anime
@@ -208,23 +228,11 @@ int data_analysis() {
             }
     }
 
-    // Store final results
-    struct ResultRow {
-        string genre;
-        string runtime_class;
-        int count;
-        double average_raw_score;
-        int average_popularity;
-        double average_rating;
-    };
-
-    vector<ResultRow> results; 
-
     // Convert matrix to individual result rows
     for (const auto& [key, stats] : matrix) { // goes through every key in the matrix; stats is the variable storing all statistics for one key
-        int sep = key.find ('|'); // find the separator in the key
-        string genre = key.substr(0, sep); // takes the string from the beggining until it reaches 'sep' and stores it in genre
-        string runtime_class = key.substr(sep + 1); // takes the string from 'sep' onward 
+        size_t sep = key.find('|'); // finds the position of the separator in the key
+        string genre = key.substr(0, sep); // takes everything before the separator and stores it as the genre
+        string runtime_class = key.substr(sep + 1); // takes everything after the separator and stores it as the runtime class
         double average_raw_score = stats.total_raw_score / stats.count;
         int average_popularity = stats.total_popularity / stats.count;
         double average_rating = stats.total_weighted_rating / stats.count;
@@ -241,7 +249,7 @@ int data_analysis() {
 
     // Sort Results - genre first, then Bayesian rating from highest to lowest
     sort(results.begin(), results.end(), []
-        (const ResultRow& a, const ResultRow& b) { // [] is a capture for including something defined outside the loop, () is the parameters of a function, {} is the body of a function 
+        (const ResultRow& a, const ResultRow& b) { // [] is the lambda capture, () contains its parameters, and {} contains the function body
             if (a.genre != b.genre) {
                 return a.genre < b.genre; // if the genres are different, sort alphabetically by genre
             }
@@ -250,52 +258,174 @@ int data_analysis() {
             }
     );
 
-    // Display Results
+
+return group_ratings; // returned so they can be used later in the code
+}
+
+// Uncertainty and Error Analysis
+
+// Helper Functions and Global Variables
+// Stores information used for analysis of a distribution
+struct DistributionStats {
+    int count = 0;
+
+    double mean = 0.0;
+    double median = 0.0;
+
+    double standard_deviation = 0.0; // variation of ratings within the group
+    double standard_error = 0.0; // uncertainty of the calculated mean
+
+};
+
+// Calculate the mean
+double calculate_mean(const vector<double>& data) {
+    if (data.empty()) return 0.0;
+
+    double sum = accumulate(data.begin(), data.end(), 0.0);
+    return sum / data.size();
+}
+
+// Calculate sample standard deviation
+double standard_deviation(const vector<double>& data) {
+
+    // Sample SD cannot be calculated with fewer than 2 entries
+    if (data.size() < 2) {
+        return -1.0; // meaning there is not enough information to calculate the standard deviation
+    }
+
+    double mean = calculate_mean(data); // gets mean from the helper function
+    double sum_squared = 0.0; // assigns initial value
+
+    for (double value : data) {
+        sum_squared += (value - mean) * (value - mean);
+    }
+    double variance = sum_squared / (data.size() - 1); // calculate sample variance using "sum of((value - mean)^2) / number of values - 1"; the mean is estimated from the sample itself, leaving n - 1 independent values
+
+    return sqrt(variance);
+}
+
+// Calculate standard error: SE = standard deviation / sqrt(number of values)
+double standard_error(const vector<double>& data) {
+    
+    double sd = standard_deviation(data); // gets sample SD from the helper function
+
+    // Standard error cannot be calculated if SD cannot be calculated
+    if (sd < 0) {
+        return -1.0;
+    }
+
+    return sd / sqrt(data.size());
+}
+    
+
+// Uncertainty and error analysis function
+map<string, DistributionStats> uncertainty_analysis(const map<string, vector<double>>& group_ratings) { // uses group_ratings from data_analysis()
+
+    // Store the standard error of each genre-runtime group
+    map<string, DistributionStats> group_errors;
+
+    for(const auto& [key, ratings] : group_ratings) { // goes through every genre-runtime key and its corresponding Bayesian ratings
+    group_errors[key].standard_deviation = standard_deviation(ratings); // calculates and stores the variation of ratings within the group
+    group_errors[key].standard_error = standard_error(ratings); // calculates and stores the uncertainty of the group's mean rating
+    }
+
+    return group_errors; // returned so they can be used later in the code
+}
+
+
+
+// Display the final results
+void display_results(const vector<ResultRow>& results, const map<string, DistributionStats>& group_errors) { // uses the analysis results and their corresponding standard errors from main()
     cout << endl;
     cout << endl;
+
+    cout << fixed << setprecision(2); // displays decimal values with two digits after the decimal point
 
     cout << "GENRE x RUNTIME ANALYSIS"
          << endl;
 
-    // Display the results
-    cout << left << setw(15) << "Genre" // assigns text to the left and fills 15 spaces
+    // Display the column names
+    cout << left << setw(15) << "Genre" // aligns the text to the left with field width of 15 characters
          << " | " << setw(42) << "Runtime Classification"
-         << " | " << setw(8) << "Entries"
+         << " | " << setw(7) << "Entries"
          << " | " << setw(10) << "Mean Score"
          << " | " << setw(15) << "Mean Popularity"
          << " | " << setw(15) << "Bayesian Rating"
+         << " | " << setw(10) << "Rating SD"
+         << " | " << setw(10) << "Rating SE"
+         << " | " << setw(22) << "SE Range"
          << endl;
 
 
-    cout << string(120,'-') << endl; // makes a sepatation pattern 
+    cout << string(162,'-') << endl; // makes a sepatation pattern 
 
     string previous_genre = "";
-        for (const ResultRow& row : results) {
-            if (!previous_genre.empty() && row.genre != previous_genre) {
-            cout << endl; // adds a blank line between genres
-            }
+
+    for (const ResultRow& row : results) {
+        if (!previous_genre.empty() && row.genre != previous_genre) {
+        cout << endl; // adds a blank line between genres
+        }
+
+    // Recreate the same genre-runtime key used in data_analysis()
+    string key = row.genre + "|" + row.runtime_class; // recreates the genre-runtime key so the corresponding standard error can be found in group_errors
        
     // Print the numerical results
     cout << left << setw(15) << row.genre
         << " | " << setw(42) << row.runtime_class
-        << " | " << setw(8) << row.count
+        << " | " << setw(7) << row.count
         << " | " << setw(10) << row.average_raw_score
         << " | " << setw(15) << row.average_popularity
-        << " | " << setw(15) << row.average_rating;
+        << " | " << setw(15) << row.average_rating
+        << " | ";
+
+        // Calculate error range
+        
+
+        // Display the standard deviation if there is enough information
+        if (group_errors.at(key).standard_deviation < 0) {
+            cout << setw(10) << "N/A";
+        }
+        else {
+            cout << setw(10) << group_errors.at(key).standard_deviation; // at() retrieves the standard deviation stored for the corresponding genre-runtime key
+        }
+
+        cout << " | ";
+
+        // Display the standard error if there is enough information
+        if (group_errors.at(key).standard_error < 0) {
+            cout << setw(10) << "N/A";
+        }
+        else {
+            cout << setw(10) << group_errors.at(key).standard_error; // retrieves the standard error stored for the corresponding genre-runtime key
+        }
+
+        cout << " | ";
+
+        // Display the SE range if there is enough information; SE range = mean Bayesian rating +/- SE
+        if (group_errors.at(key).standard_error < 0) {
+            cout << setw(15) << "N/A";
+        }
+        else {
+        double lower_error = row.average_rating - group_errors.at(key).standard_error;
+        double upper_error = row.average_rating + group_errors.at(key).standard_error;
+
+        stringstream error_range;
+        error_range << fixed << setprecision(2) << lower_error << " - " << upper_error;
+        cout << setw(15) << error_range.str();
+        }
 
         cout << endl;
 
         previous_genre = row.genre; // moves the loop along
      }
-     return 0; // the program has ran successfully
-}
-
-int uncertainty_analysis() {
 }
 
 
-int main() {
-    data_analysis(); // calls and runs the data analysis function
+int main() { // calls and runs the functions
+    vector<ResultRow> results_main; // stores the final data analysis results
+    map<string, vector<double>> group_ratings_main = data_analysis(results_main); // group_ratings from data_analysis() is saved in a main() variable; fills results_main with the data analysis results
+    map<string, DistributionStats> group_errors_main = uncertainty_analysis(group_ratings_main); // uses group_ratings from data_analysis(); saves group_errors in main()
+    display_results(results_main, group_errors_main); // displays the data analysis results together with their standard errors
     cout << endl;
     return 0; // the program has ran successfully
 }
