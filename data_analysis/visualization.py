@@ -63,7 +63,7 @@ plt.hist(
 plt.axvspan(1, 40, color="tab:blue", alpha=0.25, label="<40: Short Films/Music Videos") 
 plt.axvspan(40, 200, color="tab:orange", alpha=0.25, label="40-200: Feature Films/Short Series")
 plt.axvspan(200, 400, color="tab:green", alpha=0.25, label="200-400: Single-Cour")
-plt.axvspan(400, 800, color="tab:red", alpha=0.25, label="400-800:: Double-Cour")
+plt.axvspan(400, 800, color="tab:red", alpha=0.25, label="400-800: Double-Cour")
 plt.axvspan(800, 2400, color="tab:purple", alpha=0.25, label="800-2400: Multi-Cour")
 plt.axvspan(2400, runtime_data["Runtime"].max(), color="tab:brown", alpha=0.25, label=">2400: Long-Run")
 
