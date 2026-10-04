@@ -6,8 +6,8 @@ import numpy as np
 # Data Visualization
 
 # Read the CSV files created by the C++ analysis
-anime_data = pd.read_csv("visualization_anime_data.csv") # stores the individual anime data used for distributions and correlation
-summary_data = pd.read_csv("genre_runtime_summary.csv") # stores the genre-runtime averages and uncertainty results
+anime_data = pd.read_csv("data_analysis/python_files/visualization_anime_data.csv") # stores the individual anime data used for distributions and correlation
+summary_data = pd.read_csv("data_analysis/python_files/genre_runtime_summary.csv") # stores the genre-runtime averages and uncertainty results
 
 
 # Figure 1: Characteristics of the Analyzed Sample
