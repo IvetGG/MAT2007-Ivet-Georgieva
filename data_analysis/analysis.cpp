@@ -126,8 +126,8 @@ string csv_string(const string& text) {
 
 // Data analysis function
 map<string, vector<double>> data_analysis(vector<ResultRow>& results) { // the variable is a map, so the genre-runtime keys and their ratings can be used later in the code; uses results from main() and fills it with the data analysis results
-    ifstream file("anilist_anime_data.csv"); // opens the input CSV file for reading
-
+    ifstream file("../dataset/anilist_anime_data.csv"); // opens the input CSV file for reading
+    
     if (!file.is_open()) { // checks if file failed to open
         cout << "File not found!" << endl; // prints error message
         return {}; // stops the function and returns an empty map
