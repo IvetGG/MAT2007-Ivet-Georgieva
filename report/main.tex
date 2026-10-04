@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage[numbers]{natbib} % for numeric references
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \includegraphics[width=3cm]{figures/MSP-logo.jpg} 
+        \vspace{1cm}
+        
+        \textbf{\LARGE Write here your title:}\\
+        \textbf{\LARGE And the subtitle}
+        
+        \vspace{1.5cm}
+        
+        \textbf{\Large Your name (ID0000)}
+        
+        \vfill
+        
+        \large Date: \today
+        
+    \end{center}
+\end{titlepage}
+
+\newpage
+
+\section*{Introduction}
+%Brief introduction about the topic, phrase the scientific question and place it in a broader context
+
+\section*{Data sample}
+%Add here a brief description of the dataset
+The dataset~\cite{nuforc_dataset}...
+
+\section*{Results and discussion}
+% Add here your results, your plots, the discussion about the observation.
+
+\begin{thebibliography}{9}
+
+\bibitem{nuforc_dataset}
+
+\textit{UFO Sightings Dataset}. 
+Available at: \href{https://www.kaggle.com/datasets/NUFORC/ufo-sightings}{https://www.kaggle.com/datasets/NUFORC/ufo-sightings}.
+
+\end{thebibliography}
+\end{document}
