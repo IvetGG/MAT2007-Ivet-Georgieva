@@ -299,13 +299,32 @@ for i, genre in enumerate(genres):
 
     # Display Spearman correlation and number of entries
     plt.text(
-        0.05, 0.40,
+        0.05, 0.45,
         f"ρ = {rho:.3f} ± {rho_se:.3f}\nn = {n}",
         transform=plt.gca().transAxes,
         va="top",
         fontsize=8
     )
 
+# Use the empty 20th subplot to explain the statistical values
+plt.subplot(4, 5, 20)
+
+plt.text(
+    -0.1, 0.9,
+    "ρ = Spearman's correlation\n"
+    "± = approximate SE\n"
+    "n = number of entries",
+    transform=plt.gca().transAxes,
+    va="top",
+    fontsize=8,
+    bbox=dict(
+        boxstyle="round",
+        facecolor="white",
+        edgecolor="gray"
+    )
+)
+
+plt.axis("off") # hides the axes of the explanation subplot
 
 # Add labels for the whole figure
 plt.figtext(
@@ -323,5 +342,5 @@ plt.figtext(
 
 plt.suptitle("Runtime-Rating Correlation by Genre")
 
-plt.tight_layout(rect=[0.03, 0.03, 1, 0.96])
+plt.tight_layout(rect=[0.03, 0.07, 1, 0.96])
 plt.show()
