@@ -6,20 +6,30 @@
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage[numbers]{natbib} % for numeric references
+\usepackage{indentfirst}
+\usepackage{float}
+
+% define figures short names
+\newcommand{\characteristicsfig}{../figures/Characteristics of the Analyzed Data.png}
+\newcommand{\weightedfig}{../figures/Mean Bayesian Rating and Uncertainty by Genre and Runtime.png}
+\newcommand{\correlationfig}{../figures/Runtime-Rating Correlation by Genre.png}
 
 \begin{document}
 
 \begin{titlepage}
     \begin{center}
-        \includegraphics[width=3cm]{figures/MSP-logo.jpg} 
+        \includegraphics[width=3cm]{MSP-logo.jpg} 
         \vspace{1cm}
         
-        \textbf{\LARGE Write here your title:}\\
-        \textbf{\LARGE And the subtitle}
+        \textbf{\LARGE Correlation Between Runtime and Ratings Across Genres in Popular Anime}\\
         
         \vspace{1.5cm}
         
-        \textbf{\Large Your name (ID0000)}
+        \textbf{\Large Name: Ivet Georgieva} \\
+
+        \vspace{1.5cm}
+
+        \textbf{\Large Student ID: 6413973}
         
         \vfill
         
@@ -31,21 +41,139 @@
 \newpage
 
 \section*{Introduction}
-%Brief introduction about the topic, phrase the scientific question and place it in a broader context
+Although the standard measurement of an anime season is one or two cours, typically consisting of 12 and 24 episodes, respectively, with an episode duration of approximately 24 minutes, anime entries can vary significantly in runtime.\cite{paul2026} 
+
+As with most other film formats, anime can be classified based on genre, and users can assign a score. 
+In this report, I examine whether the runtimes of individual anime seasons have correlation with their ratings and whether this relationship differs across genres.
+
+To answer this, I analyzed a dataset containing information on anime from 1940 to 2025 that I acquired from Kaggle.\cite{welsh2026}
+The data is collected from AniList, one of the major anime-tracking platforms.\cite{anilist}
+
+For the purposes of this report, anime is defined as the animated works included in the dataset, and therefore is not limited only to animations of Japanese origin.
 
 \section*{Data sample}
-%Add here a brief description of the dataset
-The dataset~\cite{nuforc_dataset}...
+The dataset was obtained on September 13, 2026, and originally contained 20,425 entries \cite{welsh2026}. 
+Initial data selection was performed in Excel, reducing the dataset to 17,419 entries. 
+This process involved removing entries with missing values in the variables required for the analysis and retaining only anime with a finished status.
+
+The season runtime of each entry was calculated by multiplying the number of episodes by the average episode duration. 
+To ensure smooth processing in C++, commas were replaced with hyphens, while quotation marks, line breaks, and square brackets were removed.
+
+The final columns used in the analysis were: 
+\begin{itemize}
+     \item \textbf{episodes}: number of episodes
+     \item \textbf{duration}: average episode duration in minutes
+     \item \textbf{runtime}: calculated runtime of the individual anime entry in minutes 
+     \item \textbf{genres}: list of genres associated with the entry
+     \item \textbf{meanScore}: mean user score out of 100
+     \item \textbf{popularity}: number of users who have the anime on their list 
+\end{itemize}
+
+\section*{Data processing}
+Further data analysis was conducted in C++. 
+
+The anime entries were classified by genre and runtime category, as shown in Figure~\ref{fig:characteristics}. \cite{oscars} \cite{anilist} \cite{paul2026}
+
+As this analysis focuses on popular anime, only the top 50\% of the entries by popularity were utilised. 
+This resulted in a popularity cutoff of 1,586 users and a final dataset of 8,712 anime entries. 
+
+The mean rating and median popularity of the final dataset were used to calculate Bayesian-style weighted ratings, inspired by Bayesian weighted ratings \cite{algolia} and the IMDb weighted-rating formula \cite{imdbweighted}. 
+The weighted rating was calculated as \[ WR = \frac{p}{p+m}S + \frac{m}{p+m}\bar{S}, \] 
+where \(p\) is the popularity of the anime entry, \(m\) is the median popularity, \(S\) is the entry's mean score, and \(\bar{S}\) is the overall mean rating. 
+This approach takes into account the number of users supporting a score, with popularity used as a proxy for this in the analysis.
+
+The resulting data were aggregated by genre and runtime category. 
+For each group, the uncertainty of the mean weighted rating was calculated using the standard deviation and standard error.
+
+The data visualizations were produced in Python.
+Spearman's correlation coefficient, \(\rho\), was also calculated in Python to assess the relationship between runtime and weighted rating \cite{elsevier}.
+
+\begin{figure} [H]
+    \centering 
+    \includegraphics[width=0.85\textwidth]{\characteristicsfig}
+    \caption{Characteristics of the analyzed data by genre and runtime category.} 
+    \label{fig:characteristics} 
+\end{figure}
 
 \section*{Results and discussion}
-% Add here your results, your plots, the discussion about the observation.
+As observed in Figure~\ref{fig:weighted}, longer runtime is generally associated with higher Bayesian ratings, suggesting an overall positive relationship.
+However, longer-runtime groups also tend to contain fewer entries, resulting in generally larger standard errors.
 
-\begin{thebibliography}{9}
+For groups with fewer than five entries, marked with a star on the heatmap, it becomes difficult to accurately estimate the error. 
+For groups containing only one entry, the standard error cannot be calculated, hence they are colored according to their Bayesian rating but do not display an error value.
+Uncolored cells indicate a lack of entries for the respective genre-runtime group.
 
-\bibitem{nuforc_dataset}
+\begin{figure} [H]
+    \centering 
+    \includegraphics[width=0.7\textwidth]{\weightedfig}
+    \caption{Mean Bayesian rating and uncertainty by genre and runtime category.} 
+    \label{fig:weighted} 
+\end{figure}
 
-\textit{UFO Sightings Dataset}. 
-Available at: \href{https://www.kaggle.com/datasets/NUFORC/ufo-sightings}{https://www.kaggle.com/datasets/NUFORC/ufo-sightings}.
+The positive relationship observed in Figure~\ref{fig:weighted} is further supported by the Spearman correlation coefficients shown in Figure~\ref{fig:correlation}. 
+Scatterplots of runtime and Bayesian rating were produced for all 19 genres, with trendlines added to better visualize the trends.
+
+Despite most genres showing positive correlations, these correlations were generally weak, while stronger ones tended to occur in genres with fewer entries. 
+This suggests that runtime has a limited relationship with Bayesian rating.
+
+\begin{figure} [H]
+    \centering 
+    \includegraphics[width=0.85\textwidth]{\correlationfig}
+    \caption{Runtime-rating correlation by genre.} 
+    \label{fig:correlation} 
+\end{figure}
+
+Among popular anime in the analyzed dataset, a weak positive correlation between longer runtime and higher Bayesian rating was observed in 18 out of the 19 considered genres. 
+The Long-Run runtime class showed the strongest association overall, ranking first by Bayesian rating in 10 genre categories, while Multi-Cour and Double-Cour were fairly evenly distributed in second place. 
+Short Films/Music Videos ranked lowest across all genres except Hentai. 
+Hentai was the only genre to show a negative relationship, with shorter runtime associated with higher Bayesian rating.
+
+
+
+
+
+
+\begin{thebibliography}{99} 
+
+\bibitem{oscars} 
+Academy of Motion Picture Arts and Sciences. (n.d.). 
+\textit{Rules \& eligibility}. 
+\url{https://www.oscars.org/oscars/rules-eligibility} 
+
+\bibitem{algolia} 
+Algolia. (2026, September 16). 
+\textit{Bayesian averages in custom ranking}. 
+\url{https://www.algolia.com/doc/guides/managing-results/must-do/custom-ranking/how-to/bayesian-average} 
+
+\bibitem{anilist} 
+AniList. (n.d.). 
+\textit{AniList}. 
+\url{https://anilist.co/} 
+
+\bibitem{elsevier} 
+Elsevier. (n.d.). 
+\textit{Spearman correlation}. 
+ScienceDirect Topics. 
+\url{https://www.sciencedirect.com/topics/mathematics/spearman-correlation} 
+
+\bibitem{paul2026} 
+Paul, I. (2026, June 9). 
+What is a cour in anime? Meaning, episodes and release schedule explained. 
+\textit{Indiatimes}. 
+\url{https://www.indiatimes.com/entertainment/what-is-a-cour-in-anime-meaning-episodes-and-release-schedule-explained/articleshow/131602271.html?hl=en-US} 
+
+\bibitem{imdbweighted} 
+\textit{Understanding the IMDb weighted rating function for usage on my own website}. 
+(n.d.). 
+Mathematics Stack Exchange. 
+\url{https://math.stackexchange.com/questions/169032/understanding-the-imdb-weighted-rating-function-for-usage-on-my-own-website} 
+
+\bibitem{welsh2026} 
+Welsh, C. M. (2026, September 13). 
+\textit{AniList anime dataset} [Data set]. 
+Kaggle. 
+\url{https://www.kaggle.com/datasets/calebmwelsh/anilist-anime-dataset} 
 
 \end{thebibliography}
+
 \end{document}
