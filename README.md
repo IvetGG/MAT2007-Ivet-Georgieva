@@ -13,7 +13,9 @@ The analysis uses data obtained from AniList through a Kaggle dataset and focuse
 
 The required libraries can be installed using:
 
-`pip install pandas matplotlib scipy numpy`
+```bash
+pip install pandas matplotlib scipy numpy
+```
 
 ## Data sample
 The original dataset can be acquired using this link: 
