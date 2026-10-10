@@ -234,7 +234,7 @@ map<string, vector<double>> data_analysis(vector<ResultRow>& results) { // the v
 
 
     // Save the data in an output CSV file for visualization
-    ofstream visualization_file("visualization_anime_data.csv"); // creates the CSV file
+    ofstream visualization_file("python_files/visualization_anime_data.csv"); // creates the CSV file
     if (!visualization_file) {
         cout << "Could not create visualization_anime_data.csv!" << endl;
     }
@@ -261,7 +261,7 @@ map<string, vector<double>> data_analysis(vector<ResultRow>& results) { // the v
             }
         }
         visualization_file.close(); // closes output file
-        cout << "Data for visualization is saved in visualization_anime_data.csv!" << endl;
+        cout << "Data for visualization is saved in python_files/visualization_anime_data.csv!" << endl;
     }
 
     // Genre and Runtime Aggregation
@@ -397,7 +397,7 @@ map<string, DistributionStats> uncertainty_analysis(const map<string, vector<dou
 void display_results(const vector<ResultRow>& results, const map<string, DistributionStats>& group_errors) { // uses the analysis results and their corresponding standard errors from main()
     
     // Create a CSV file for storing the final genre-runtime analysis results
-    ofstream summary_file("genre_runtime_summary.csv");
+    ofstream summary_file("python_files/genre_runtime_summary.csv");
         if (!summary_file) {
             cout << "Could not create genre_runtime_summary.csv!" << endl;
         }
@@ -513,7 +513,7 @@ void display_results(const vector<ResultRow>& results, const map<string, Distrib
 
     summary_file.close();
     cout << endl;
-    cout << "Genre-runtime summary is saved in genre_runtime_summary.csv" << endl;
+    cout << "Genre-runtime summary is saved in python_files/genre_runtime_summary.csv" << endl;
 }
 
 
